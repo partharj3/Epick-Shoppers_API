@@ -30,4 +30,8 @@ public interface AuthService {
 
 	ResponseEntity<SimpleResponseStructure> revokeOtherDevicesAccess(String accessToken, String refreshToken,
 			HttpServletResponse response);
+	
+	public void cleanupExpiredAccessTokens();
+	
+	public void cleanupExpiredRefreshTokens();
 }

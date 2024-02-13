@@ -273,6 +273,17 @@ public class AuthServiceImpl implements AuthService{
 		throw new IllegalRequestException("You are not logged in any other devices");
 	}
 
+	@Override
+	public void cleanupExpiredAccessTokens() {
+		accessTokenRepo.deleteAll(accessTokenRepo.findAllByExpirationBefore(LocalDateTime.now()));
+	}
+
+	@Override
+	public void cleanupExpiredRefreshTokens() {
+		refreshTokenRepo.deleteAll(refreshTokenRepo.findAllByExpirationBefore(LocalDateTime.now()));
+	}
+	
+	/******************** PRIVATE OPERATIONS ******************************/
 	
 	private void blockRefreshTokens(List<RefreshToken> refreshTokens) {
 		refreshTokens.forEach(refToken ->{
