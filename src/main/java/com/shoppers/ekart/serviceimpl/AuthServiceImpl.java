@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -256,7 +257,37 @@ public class AuthServiceImpl implements AuthService{
 		return new ResponseEntity<SimpleResponseStructure>(structure, HttpStatus.OK);
 	}
 	
+	@Override
+	public ResponseEntity<SimpleResponseStructure> revokeOtherDevicesAccess(String accessToken, String refreshToken, HttpServletResponse response) {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		if(username!= null) {
+			userRepo.findByUsername(username).ifPresent(user ->{
+				blockAccessTokens(accessTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, accessToken));
+				blockRefreshTokens(refreshTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, refreshToken));
+			});
+			
+			SimpleResponseStructure simpleStructure = new SimpleResponseStructure();
+			simpleStructure.setStatusCode(HttpStatus.OK.value());
+			simpleStructure.setMessage("Your sessions logged out in other devices successfully");
+		}
+		throw new IllegalRequestException("You are not logged in any other devices");
+	}
+
 	
+	private void blockRefreshTokens(List<RefreshToken> refreshTokens) {
+		refreshTokens.forEach(refToken ->{
+			refToken.setBlocked(true);
+			refreshTokenRepo.save(refToken);
+		});
+	}
+
+	private void blockAccessTokens(List<AccessToken> accessTokens) {
+		accessTokens.forEach(aToken ->{
+			aToken.setBlocked(true);
+			accessTokenRepo.save(aToken);
+		});
+	}
+
 	private void grantAccess(HttpServletResponse response, User user) {
 		
 		/**
@@ -382,6 +413,4 @@ public class AuthServiceImpl implements AuthService{
 				.userRole(user.getUserRole())
 				.build();
 	}
-
-
 }
