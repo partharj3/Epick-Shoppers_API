@@ -34,4 +34,7 @@ public interface AuthService {
 	public void cleanupExpiredAccessTokens();
 	
 	public void cleanupExpiredRefreshTokens();
+
+	ResponseEntity<SimpleResponseStructure> revokeAllDevicesAccess(String accessToken, String refreshToken,
+			HttpServletResponse response);
 }
