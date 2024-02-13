@@ -13,8 +13,10 @@ import com.shoppers.ekart.requestdto.UserRequest;
 import com.shoppers.ekart.responsedto.AuthResponse;
 import com.shoppers.ekart.responsedto.UserResponse;
 import com.shoppers.ekart.service.AuthService;
-import com.shoppers.ekart.util.ResponseStruture;
+import com.shoppers.ekart.util.ResponseStructure;
+import com.shoppers.ekart.util.SimpleResponseStructure;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -27,12 +29,12 @@ public class AuthController {
 	private AuthService authService;
 	
 	@PostMapping("/register")
-	public ResponseEntity<ResponseStruture<String>> registerUser(@RequestBody @Valid UserRequest request){
+	public ResponseEntity<ResponseStructure<String>> registerUser(@RequestBody @Valid UserRequest request){
 		return authService.registerUser(request);
 	}
 	
 	@PostMapping("/verify-otp")
-	public ResponseEntity<ResponseStruture<UserResponse>> verifyOTP(@RequestBody OtpModel otp){
+	public ResponseEntity<ResponseStructure<UserResponse>> verifyOTP(@RequestBody OtpModel otp){
 		return authService.verifyOTP(otp);
 	}
 	
@@ -44,11 +46,22 @@ public class AuthController {
 	 * @return
 	 */
 	@PostMapping("/login")
-	public ResponseEntity<ResponseStruture<AuthResponse>> login(
+	public ResponseEntity<ResponseStructure<AuthResponse>> login(
 			@CookieValue(name="at", required = false) String accessToken,
 			@CookieValue(name="rt", required = false) String refreshToken, 
 			@RequestBody AuthRequest request, HttpServletResponse response){
 		return authService.login(accessToken, refreshToken,request,response);
+	}
+	
+	@PostMapping("/traditional-logout")
+	public ResponseEntity<String> traditionalLogout(HttpServletRequest request, HttpServletResponse response){
+		return authService.traditionalLogout(request,response);
+	}
+	
+	@PostMapping("/logout")
+	public ResponseEntity<SimpleResponseStructure> logout(@CookieValue(name = "at", required = false) 
+		String accessToken, @CookieValue(name = "rt", required = false) String refreshToken, HttpServletResponse response){
+		return authService.logout(accessToken, refreshToken,response);
 	}
 
 }
