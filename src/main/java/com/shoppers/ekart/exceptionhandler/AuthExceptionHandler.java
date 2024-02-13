@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import com.shoppers.ekart.exception.IllegalRequestException;
 import com.shoppers.ekart.exception.OtpNotVerifiedException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
+import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
 
 @RestControllerAdvice
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
@@ -62,4 +63,11 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	private ResponseEntity<Object> handleOtpVerificationException(OtpNotVerifiedException exp){
 		return structure(HttpStatus.EXPECTATION_FAILED, exp.getMessage(), "Failed to Verify the OTP");
 	}
+	
+	
+	@ExceptionHandler(UserAlreadyLoggedInException.class)
+	private ResponseEntity<Object> handleUserAlreadyLoggedInException(UserAlreadyLoggedInException exp){
+		return structure(HttpStatus.OK, exp.getMessage(), "Already Logged In");
+	}
+	
 }
