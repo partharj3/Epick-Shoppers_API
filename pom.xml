@@ -66,6 +66,19 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId> <!-- this library version will be configured by spring boot version itself-->
 		</dependency>
+		
+		<!-- MAIL SENDER -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		
+		<!-- Cache Provider: com.google.guava/guava -->
+		<dependency>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>32.1.2-jre</version>
+		</dependency>
 	</dependencies>
 
 	<build>
