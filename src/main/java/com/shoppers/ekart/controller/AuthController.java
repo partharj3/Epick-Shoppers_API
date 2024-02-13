@@ -53,7 +53,7 @@ public class AuthController {
 		return authService.login(accessToken, refreshToken,request,response);
 	}
 	
-	@PostMapping("/traditional-logout")
+//	@PostMapping("/traditional-logout")
 	public ResponseEntity<String> traditionalLogout(HttpServletRequest request, HttpServletResponse response){
 		return authService.traditionalLogout(request,response);
 	}
@@ -64,14 +64,21 @@ public class AuthController {
 		return authService.logout(accessToken, refreshToken,response);
 	}
 
-	@PostMapping("/revoke-others")
+	@PostMapping("/revoke-others-access")
 	public ResponseEntity<SimpleResponseStructure> revokeOtherDevicesAccess(@CookieValue(name = "at", required = false) 
 		String accessToken, @CookieValue(name = "rt", required = false) String refreshToken, HttpServletResponse response){
 		return authService.revokeOtherDevicesAccess(accessToken, refreshToken,response);
 	}
 	
+	@PostMapping("/revoke-all-access")
 	public ResponseEntity<SimpleResponseStructure> revokeAllDevicesAccess(@CookieValue(name="at", required=false) 
 	   String accessToken, @CookieValue(name="rt",required = false) String refreshToken, HttpServletResponse response){
 		return authService.revokeAllDevicesAccess(accessToken,refreshToken,response);
+	}
+	
+	@PostMapping("/refresh-login")
+	public ResponseEntity<SimpleResponseStructure> refreshLogin(@CookieValue(name="at", required=false) 
+	   String accessToken, @CookieValue(name="rt",required = false) String refreshToken, HttpServletResponse response){
+		return authService.refreshLogin(accessToken,refreshToken,response);
 	}
 }

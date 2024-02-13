@@ -73,6 +73,7 @@ public class AuthServiceImpl implements AuthService{
 	private JwtService jwtService;
 	private AccessTokenRepository accessTokenRepo;
 	private RefreshTokenRepository refreshTokenRepo;
+	private SimpleResponseStructure simpleStructure;
 	
 	@Value("${myapp.access.expiry}")
 	private int accessExpiryInSeconds;
@@ -93,7 +94,8 @@ public class AuthServiceImpl implements AuthService{
 						   CookieManager cookieManager,
 						   JwtService jwtService,
 						   AccessTokenRepository accessTokenRepo,
-						   RefreshTokenRepository refreshTokenRepo) {
+						   RefreshTokenRepository refreshTokenRepo,
+						   SimpleResponseStructure simpleStructure) {
 	super();
 	this.userRepo = userRepo;
 	this.sellerRepo = sellerRepo;
@@ -109,6 +111,7 @@ public class AuthServiceImpl implements AuthService{
 	this.jwtService = jwtService;
 	this.accessTokenRepo = accessTokenRepo;
 	this.refreshTokenRepo = refreshTokenRepo;
+	this.simpleStructure = simpleStructure;
 	}
 	
 	@Override
@@ -299,11 +302,35 @@ public class AuthServiceImpl implements AuthService{
 		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
 		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
 		
-		SimpleResponseStructure simpleStructure = new SimpleResponseStructure();
 		simpleStructure.setStatusCode(HttpStatus.OK.value());
 		simpleStructure.setMessage("Successfully logged out from all devices");
 		
 		return new ResponseEntity<SimpleResponseStructure>(simpleStructure, HttpStatus.OK);
+	}
+	
+	@Override
+	public ResponseEntity<SimpleResponseStructure> refreshLogin(String accessToken, String refreshToken, HttpServletResponse response) {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		if(username == null || refreshToken == null) throw new UserNotLoggedInException("Please do login");
+		
+		if(accessToken!=null) {
+			accessTokenRepo.findByToken(refreshToken).ifPresent(token ->{
+				token.setBlocked(true);
+				accessTokenRepo.save(token);
+			});
+		}
+		
+		if(refreshToken!=null) {
+			refreshTokenRepo.findByToken(refreshToken).ifPresent(token ->{
+				token.setBlocked(true);
+				refreshTokenRepo.save(token);
+			});
+		}
+		grantAccess(response, userRepo.findByUsername(username).get());
+
+		return new ResponseEntity<SimpleResponseStructure>(simpleStructure
+						.setStatusCode(HttpStatus.OK.value())
+						.setMessage("Login refreshed Successfully with token rotation"), HttpStatus.OK);
 	}
 	
 	/******************** PRIVATE OPERATIONS ******************************/
