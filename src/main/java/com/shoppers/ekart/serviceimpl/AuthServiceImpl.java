@@ -29,6 +29,7 @@ import com.shoppers.ekart.exception.IllegalRequestException;
 import com.shoppers.ekart.exception.OtpNotVerifiedException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
 import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
+import com.shoppers.ekart.exception.UserNotLoggedInException;
 import com.shoppers.ekart.repository.AccessTokenRepository;
 import com.shoppers.ekart.repository.CustomerRepository;
 import com.shoppers.ekart.repository.RefreshTokenRepository;
@@ -43,11 +44,13 @@ import com.shoppers.ekart.security.JwtService;
 import com.shoppers.ekart.service.AuthService;
 import com.shoppers.ekart.util.CookieManager;
 import com.shoppers.ekart.util.MessageStructure;
-import com.shoppers.ekart.util.ResponseStruture;
+import com.shoppers.ekart.util.ResponseStructure;
+import com.shoppers.ekart.util.SimpleResponseStructure;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,8 +62,8 @@ public class AuthServiceImpl implements AuthService{
 	private SellerRepository sellerRepo;
 	private CustomerRepository customerRepo;
 	private PasswordEncoder encoder;
-	private ResponseStruture<UserResponse> structure;
-	private ResponseStruture<AuthResponse> authStructure;
+	private ResponseStructure<UserResponse> structure;
+	private ResponseStructure<AuthResponse> authStructure;
 	private CacheStore<Integer> otpCacheStore;
 	private CacheStore<User> userCacheStore;
 	private JavaMailSender javaMailSender;
@@ -80,8 +83,8 @@ public class AuthServiceImpl implements AuthService{
 				           SellerRepository sellerRepo, 
 				           CustomerRepository customerRepo,
 						   PasswordEncoder encoder, 
-						   ResponseStruture<UserResponse> structure,
-						   ResponseStruture<AuthResponse> authStructure,
+						   ResponseStructure<UserResponse> structure,
+						   ResponseStructure<AuthResponse> authStructure,
 						   CacheStore<Integer> otpCacheStore,
 						   CacheStore<User> userCacheStore, 
 						   JavaMailSender javaMailSender, 
@@ -108,7 +111,7 @@ public class AuthServiceImpl implements AuthService{
 	}
 	
 	@Override
-	public ResponseEntity<ResponseStruture<String>> registerUser(UserRequest request) {
+	public ResponseEntity<ResponseStructure<String>> registerUser(UserRequest request) {
 		  
 		if(userRepo.existsByEmail(request.getEmail())) throw new UserAleadyExistsByEmailException("Registration failed !!");
 		
@@ -124,9 +127,9 @@ public class AuthServiceImpl implements AuthService{
 			log.error("This Email address does not exist");
 		}
 		
-		ResponseStruture<String> structure =new ResponseStruture<>();
+		ResponseStructure<String> structure =new ResponseStructure<>();
 		
-	    return new ResponseEntity<ResponseStruture<String>>(
+	    return new ResponseEntity<ResponseStructure<String>>(
 			       structure.setStatusCode(HttpStatus.ACCEPTED.value())
 				            .setMessage("OTP sent to your Email: "+user.getEmail())
 					        .setData(user.getUsername()+", Kindly verify your email"), HttpStatus.ACCEPTED);
@@ -148,7 +151,7 @@ public class AuthServiceImpl implements AuthService{
 //    }
 
 	@Override
-	public ResponseEntity<ResponseStruture<UserResponse>> verifyOTP(OtpModel otpModel) {
+	public ResponseEntity<ResponseStructure<UserResponse>> verifyOTP(OtpModel otpModel) {
 		User user = userCacheStore.get(otpModel.getEmail());
 		Integer otp = otpCacheStore.get(otpModel.getEmail());
 		
@@ -165,7 +168,7 @@ public class AuthServiceImpl implements AuthService{
 			log.error("This Email address does not exist");
 		}
 		
-		return new ResponseEntity<ResponseStruture<UserResponse>>(
+		return new ResponseEntity<ResponseStructure<UserResponse>>(
 			       structure.setStatusCode(HttpStatus.CREATED.value())
 		            .setMessage("Registration Successful")
 			        .setData(mapToUserResponse(user)), HttpStatus.CREATED);
@@ -173,7 +176,7 @@ public class AuthServiceImpl implements AuthService{
 	}
 	
 	@Override
-	public ResponseEntity<ResponseStruture<AuthResponse>> login(String at, String rt, AuthRequest request,HttpServletResponse response) {
+	public ResponseEntity<ResponseStructure<AuthResponse>> login(String at, String rt, AuthRequest request,HttpServletResponse response) {
 		if(at==null && rt==null) {
 			String username = request.getEmail().split("@")[0];
 			UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, request.getPassword());
@@ -201,7 +204,59 @@ public class AuthServiceImpl implements AuthService{
 		throw new UserAlreadyLoggedInException("Already Logged in");
 	}
 	
+	@Override
+	public ResponseEntity<String> traditionalLogout(HttpServletRequest request, HttpServletResponse response) {
+		
+		String at = "",rt="";
+		
+		Cookie[] cookies = request.getCookies();
+		
+		for(Cookie cookie: cookies) {
+			if(cookie.getName().equals("at")) at=cookie.getValue();
+			if(cookie.getName().equals("rt")) rt=cookie.getValue();
+		}
+		
+		accessTokenRepo.findByToken(at).ifPresent( accessToken ->{
+			accessToken.setBlocked(true);
+			accessTokenRepo.save(accessToken);
+		});
+		response.addCookie(cookieManager.invalidate(new Cookie("at","")));
+		
+		refreshTokenRepo.findByToken(rt).ifPresent( refreshToken ->{
+			refreshToken.setBlocked(true);
+			refreshTokenRepo.save(refreshToken);
+		});
+		response.addCookie(cookieManager.invalidate(new Cookie("rt","")));
+		
+		return new ResponseEntity<String>("Logout Successfully !",HttpStatus.OK);
+	}
 
+	@Override
+	public ResponseEntity<SimpleResponseStructure> logout(String accessToken, String refreshToken,HttpServletResponse response) {
+		
+		if(accessToken == null && refreshToken == null)
+			throw new UserNotLoggedInException("Please do log in");
+		
+		accessTokenRepo.findByToken(accessToken).ifPresent(at ->{
+			at.setBlocked(true);
+			accessTokenRepo.save(at);
+		});
+		response.addCookie(cookieManager.invalidate(new Cookie("at","")));
+		
+		refreshTokenRepo.findByToken(refreshToken).ifPresent(rt ->{
+			rt.setBlocked(true);
+			refreshTokenRepo.save(rt);
+		});
+		response.addCookie(cookieManager.invalidate(new Cookie("rt","")));
+		
+		SimpleResponseStructure structure = new SimpleResponseStructure();
+		structure.setStatusCode(HttpStatus.OK.value());
+		structure.setMessage("Logout Successfully");
+		
+		return new ResponseEntity<SimpleResponseStructure>(structure, HttpStatus.OK);
+	}
+	
+	
 	private void grantAccess(HttpServletResponse response, User user) {
 		
 		/**

@@ -7,16 +7,24 @@ import com.shoppers.ekart.requestdto.OtpModel;
 import com.shoppers.ekart.requestdto.UserRequest;
 import com.shoppers.ekart.responsedto.AuthResponse;
 import com.shoppers.ekart.responsedto.UserResponse;
-import com.shoppers.ekart.util.ResponseStruture;
+import com.shoppers.ekart.util.ResponseStructure;
+import com.shoppers.ekart.util.SimpleResponseStructure;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
-	ResponseEntity<ResponseStruture<String>> registerUser(UserRequest request);
+	ResponseEntity<ResponseStructure<String>> registerUser(UserRequest request);
 
 	void removeNonVerifiedUsers();
 
-	ResponseEntity<ResponseStruture<UserResponse>> verifyOTP(OtpModel otp);
+	ResponseEntity<ResponseStructure<UserResponse>> verifyOTP(OtpModel otp);
 	
-	public ResponseEntity<ResponseStruture<AuthResponse>> login(String at, String rt, AuthRequest request,HttpServletResponse response);
+	public ResponseEntity<ResponseStructure<AuthResponse>> login(String at, String rt, AuthRequest request,HttpServletResponse response);
+
+	ResponseEntity<String> traditionalLogout(HttpServletRequest request,
+			HttpServletResponse response);
+
+	ResponseEntity<SimpleResponseStructure> logout(String accessToken, String refreshToken,
+			HttpServletResponse response);
 }

@@ -20,6 +20,7 @@ import com.shoppers.ekart.exception.IllegalRequestException;
 import com.shoppers.ekart.exception.OtpNotVerifiedException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
 import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
+import com.shoppers.ekart.exception.UserNotLoggedInException;
 
 @RestControllerAdvice
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
@@ -68,6 +69,11 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	@ExceptionHandler(UserAlreadyLoggedInException.class)
 	private ResponseEntity<Object> handleUserAlreadyLoggedInException(UserAlreadyLoggedInException exp){
 		return structure(HttpStatus.OK, exp.getMessage(), "Already Logged In");
+	}
+	
+	@ExceptionHandler(UserNotLoggedInException.class)
+	private ResponseEntity<Object> handleUserNotLoggedInException(UserNotLoggedInException exp){
+		return structure(HttpStatus.BAD_REQUEST, exp.getMessage(), "User not Logged in");
 	}
 	
 }
