@@ -70,4 +70,8 @@ public class AuthController {
 		return authService.revokeOtherDevicesAccess(accessToken, refreshToken,response);
 	}
 	
+	public ResponseEntity<SimpleResponseStructure> revokeAllDevicesAccess(@CookieValue(name="at", required=false) 
+	   String accessToken, @CookieValue(name="rt",required = false) String refreshToken, HttpServletResponse response){
+		return authService.revokeAllDevicesAccess(accessToken,refreshToken,response);
+	}
 }

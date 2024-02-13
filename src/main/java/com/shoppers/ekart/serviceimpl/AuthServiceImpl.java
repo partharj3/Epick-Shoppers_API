@@ -265,10 +265,12 @@ public class AuthServiceImpl implements AuthService{
 				blockAccessTokens(accessTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, accessToken));
 				blockRefreshTokens(refreshTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, refreshToken));
 			});
+			response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
+			response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
 			
 			SimpleResponseStructure simpleStructure = new SimpleResponseStructure();
 			simpleStructure.setStatusCode(HttpStatus.OK.value());
-			simpleStructure.setMessage("Your sessions logged out in other devices successfully");
+			simpleStructure.setMessage("Access revoked from other devices successfully");
 		}
 		throw new IllegalRequestException("You are not logged in any other devices");
 	}
@@ -281,6 +283,27 @@ public class AuthServiceImpl implements AuthService{
 	@Override
 	public void cleanupExpiredRefreshTokens() {
 		refreshTokenRepo.deleteAll(refreshTokenRepo.findAllByExpirationBefore(LocalDateTime.now()));
+	}
+	
+	@Override
+	public ResponseEntity<SimpleResponseStructure> revokeAllDevicesAccess(String accessToken, String refreshToken,
+			HttpServletResponse response) {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		if(username == null) throw new UserNotLoggedInException("Please Log in");
+		
+		userRepo.findByUsername(username).ifPresent(user ->{
+			blockAccessTokens(accessTokenRepo.findByTokenAndIsBlocked(user, false));
+			blockRefreshTokens(refreshTokenRepo.findByTokenAndIsBlocked(user, false));
+		});
+		
+		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
+		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
+		
+		SimpleResponseStructure simpleStructure = new SimpleResponseStructure();
+		simpleStructure.setStatusCode(HttpStatus.OK.value());
+		simpleStructure.setMessage("Successfully logged out from all devices");
+		
+		return new ResponseEntity<SimpleResponseStructure>(simpleStructure, HttpStatus.OK);
 	}
 	
 	/******************** PRIVATE OPERATIONS ******************************/
