@@ -21,6 +21,7 @@ import com.shoppers.ekart.exception.OtpNotVerifiedException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
 import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
 import com.shoppers.ekart.exception.UserNotLoggedInException;
+import com.shoppers.ekart.exception.UsernameNotFoundException;
 
 @RestControllerAdvice
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
@@ -65,15 +66,19 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 		return structure(HttpStatus.EXPECTATION_FAILED, exp.getMessage(), "Failed to Verify the OTP");
 	}
 	
-	
 	@ExceptionHandler(UserAlreadyLoggedInException.class)
 	private ResponseEntity<Object> handleUserAlreadyLoggedInException(UserAlreadyLoggedInException exp){
-		return structure(HttpStatus.OK, exp.getMessage(), "Already Logged In");
+		return structure(HttpStatus.FOUND, exp.getMessage(), "Already Logged In");
 	}
 	
 	@ExceptionHandler(UserNotLoggedInException.class)
 	private ResponseEntity<Object> handleUserNotLoggedInException(UserNotLoggedInException exp){
 		return structure(HttpStatus.BAD_REQUEST, exp.getMessage(), "User not Logged in");
+	}
+	
+	@ExceptionHandler(UsernameNotFoundException.class)
+	private ResponseEntity<Object> handleUsernameNotFoundException(UsernameNotFoundException exp){
+		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "User not exists");
 	}
 	
 }

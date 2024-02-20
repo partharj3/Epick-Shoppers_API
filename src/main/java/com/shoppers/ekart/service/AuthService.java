@@ -38,6 +38,6 @@ public interface AuthService {
 	ResponseEntity<SimpleResponseStructure> revokeAllDevicesAccess(String accessToken, String refreshToken,
 			HttpServletResponse response);
 
-	ResponseEntity<SimpleResponseStructure> refreshLogin(String accessToken, String refreshToken,
+	ResponseEntity<ResponseStructure<AuthResponse>> refreshLogin(String accessToken, String refreshToken,
 			HttpServletResponse response);
 }

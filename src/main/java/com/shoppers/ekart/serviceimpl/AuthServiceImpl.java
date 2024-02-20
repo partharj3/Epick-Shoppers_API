@@ -15,7 +15,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +30,7 @@ import com.shoppers.ekart.exception.OtpNotVerifiedException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
 import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
 import com.shoppers.ekart.exception.UserNotLoggedInException;
+import com.shoppers.ekart.exception.UsernameNotFoundException;
 import com.shoppers.ekart.repository.AccessTokenRepository;
 import com.shoppers.ekart.repository.CustomerRepository;
 import com.shoppers.ekart.repository.RefreshTokenRepository;
@@ -181,31 +181,36 @@ public class AuthServiceImpl implements AuthService{
 	
 	@Override
 	public ResponseEntity<ResponseStructure<AuthResponse>> login(String at, String rt, AuthRequest request,HttpServletResponse response) {
-		if(at==null && rt==null) {
-			String username = request.getEmail().split("@")[0];
-			UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, request.getPassword());
-			
-			Authentication authentication = authManager.authenticate(token);
-			if(!authentication.isAuthenticated()) 
-				throw new UsernameNotFoundException("Failed to Authenticate the user");
-			else 
-				//generating the cookies and auth-response and returning to the client.
-				return userRepo.findByUsername(username).map(user ->{
-					grantAccess(response, user);
-					return ResponseEntity
-							.ok(authStructure.setStatusCode(HttpStatus.OK.value())
-							.setMessage("Login Successful")
-							.setData(AuthResponse.builder()
-									.userId(user.getUserId())
-									.username(username)
-									.role(user.getUserRole().name())
-									.isAuthenticated(true)
-									.accessExpiration(LocalDateTime.now().plusSeconds(accessExpiryInSeconds))
-									.refreshExpiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
-									.build()));
-				}).get();
+		if(at!=null || rt!=null) 
+			throw new UserAlreadyLoggedInException("Logged in");
+		System.out.println("new log");
+		String username = request.getEmail().split("@")[0];
+		UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, request.getPassword());
+		System.out.println(username+", "+request.getPassword()+", token: "+token);
+		Authentication authentication=null;
+		try {
+			authentication = authManager.authenticate(token);
+		}catch(Exception exp) {
+			System.out.println("EXCEPTION");
+			System.out.println(exp.getMessage());
 		}
-		throw new UserAlreadyLoggedInException("Already Logged in");
+		if(!authentication.isAuthenticated()) 
+			throw new UsernameNotFoundException("Failed to Authenticate the user");
+			//generating the cookies and auth-response and returning to the client.
+			return userRepo.findByUsername(username).map(user ->{
+				grantAccess(response, user);
+				return ResponseEntity
+						.ok(authStructure.setStatusCode(HttpStatus.OK.value())
+						.setMessage("Login Successful")
+						.setData(AuthResponse.builder()
+								.userId(user.getUserId())
+								.username(username)
+								.role(user.getUserRole().name())
+								.isAuthenticated(true)
+								.accessExpiration(LocalDateTime.now().plusSeconds(accessExpiryInSeconds))
+								.refreshExpiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
+								.build()));
+			}).get();
 	}
 	
 	@Override
@@ -262,20 +267,24 @@ public class AuthServiceImpl implements AuthService{
 	
 	@Override
 	public ResponseEntity<SimpleResponseStructure> revokeOtherDevicesAccess(String accessToken, String refreshToken, HttpServletResponse response) {
+		if(accessToken==null || refreshToken==null) 
+			throw new UserNotLoggedInException("Please do login");
+		
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		if(username!= null) {
-			userRepo.findByUsername(username).ifPresent(user ->{
-				blockAccessTokens(accessTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, accessToken));
-				blockRefreshTokens(refreshTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, refreshToken));
-			});
-			response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
-			response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
-			
-			SimpleResponseStructure simpleStructure = new SimpleResponseStructure();
-			simpleStructure.setStatusCode(HttpStatus.OK.value());
-			simpleStructure.setMessage("Access revoked from other devices successfully");
-		}
-		throw new IllegalRequestException("You are not logged in any other devices");
+		
+		if(username==null) throw new IllegalRequestException("You are not logged in any other devices"); 
+		
+		userRepo.findByUsername(username).ifPresent(user ->{
+			blockAccessTokens(accessTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, accessToken));
+			blockRefreshTokens(refreshTokenRepo.findByUserAndIsBlockedAndTokenNot(user, false, refreshToken));
+		});
+		
+//		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
+//		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
+		
+		return new ResponseEntity<SimpleResponseStructure>(
+			 simpleStructure.setStatusCode(HttpStatus.OK.value())
+				            .setMessage("Access revoked from other devices successfully"), HttpStatus.OK);
 	}
 
 	@Override
@@ -309,9 +318,10 @@ public class AuthServiceImpl implements AuthService{
 	}
 	
 	@Override
-	public ResponseEntity<SimpleResponseStructure> refreshLogin(String accessToken, String refreshToken, HttpServletResponse response) {
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		if(username == null || refreshToken == null) throw new UserNotLoggedInException("Please do login");
+	public ResponseEntity<ResponseStructure<AuthResponse>> refreshLogin(String accessToken, String refreshToken, HttpServletResponse response) {
+		
+		System.out.println(accessToken+" -> accesstoken, refreshtoken <- "+refreshToken);
+		log.info("Requested to refresh the user Access Token...");
 		
 		if(accessToken!=null) {
 			accessTokenRepo.findByToken(refreshToken).ifPresent(token ->{
@@ -320,19 +330,39 @@ public class AuthServiceImpl implements AuthService{
 			});
 		}
 		
-		if(refreshToken!=null) {
+		if(refreshToken == null) throw new UserNotLoggedInException("Please do login");
+		
+		User user = userRepo.findByUsername(jwtService.extractUsername(refreshToken))
+				.orElseThrow(()->new UsernameNotFoundException("Failed to refresh login"));
+		
+		boolean tokenNotBlocked = refreshTokenRepo.existsByTokenAndIsBlockedAndExpirationAfter(refreshToken, false, LocalDateTime.now());
+		if(tokenNotBlocked) {
+			
+			// create new cookie
+			grantAccess(response, user);
+			System.out.println("-------- Access granted -------------");
+			System.out.println("User ID: "+user.getUserId());
+			
+			// Block the refresh token
 			refreshTokenRepo.findByToken(refreshToken).ifPresent(token ->{
 				token.setBlocked(true);
 				refreshTokenRepo.save(token);
 			});
-		}
-		grantAccess(response, userRepo.findByUsername(username).get());
-
-		return new ResponseEntity<SimpleResponseStructure>(simpleStructure
-						.setStatusCode(HttpStatus.OK.value())
-						.setMessage("Login refreshed Successfully with token rotation"), HttpStatus.OK);
+			return ResponseEntity
+					.ok(authStructure.setStatusCode(HttpStatus.OK.value())
+					.setMessage("Login refreshed with Token rotation")
+					.setData(AuthResponse.builder()
+							.userId(user.getUserId())
+							.username(user.getUsername())
+							.role(user.getUserRole().name())
+							.isAuthenticated(true)
+							.accessExpiration(LocalDateTime.now().plusSeconds(accessExpiryInSeconds))
+							.refreshExpiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
+							.build()));	
+		
+		}else
+			throw new UserNotLoggedInException("Please do login");
 	}
-	
 	/******************** PRIVATE OPERATIONS ******************************/
 	
 	private void blockRefreshTokens(List<RefreshToken> refreshTokens) {

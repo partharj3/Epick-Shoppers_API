@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class IllegalRequestException extends RuntimeException {
-	private String messaqe;
+	private String message;
 }

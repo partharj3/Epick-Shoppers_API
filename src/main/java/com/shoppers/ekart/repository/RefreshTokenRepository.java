@@ -15,4 +15,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 	List<RefreshToken> findByUserAndIsBlockedAndTokenNot(User user,boolean isBlocked,String refreshToken);
 	List<RefreshToken> findAllByExpirationBefore(LocalDateTime now);
 	List<RefreshToken> findByTokenAndIsBlocked(User user, boolean b);
+	Optional<RefreshToken> findByTokenAndIsBlocked(String at, boolean isBlocked);
+	
+	boolean existsByTokenAndIsBlockedAndExpirationAfter(String refreshToken, boolean isBlocked, LocalDateTime currentTime);
 }

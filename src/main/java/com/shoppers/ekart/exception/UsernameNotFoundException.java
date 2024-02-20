@@ -4,9 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+@AllArgsConstructor
 @Getter
 @Setter
-@AllArgsConstructor
-public class UserAlreadyLoggedInException extends RuntimeException {
+public class UsernameNotFoundException extends RuntimeException {
 	private String message;
 }

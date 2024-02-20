@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.shoppers.ekart.entity.AccessToken;
+import com.shoppers.ekart.entity.RefreshToken;
 import com.shoppers.ekart.exception.UserNotLoggedInException;
 import com.shoppers.ekart.repository.AccessTokenRepository;
+import com.shoppers.ekart.repository.RefreshTokenRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -34,38 +36,41 @@ public class JwtFilter extends OncePerRequestFilter{
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		String at="", rt="";
+		String at = null,rt = null;
 		Cookie[] cookies = request.getCookies();
-		
-		for(Cookie cookie : cookies) {
-			if(cookie.getName().equals("at")) at=cookie.getValue();
-			if(cookie.getName().equals("rt")) rt=cookie.getValue();
-		}
-		
-		String username="";
-		if(at!=null && rt!=null) {
-			
-			Optional<AccessToken> accessTokenObj =accessTokenRepo.findByTokenAndIsBlocked(at,false);
-		
-			if(accessTokenObj == null) throw new UserNotLoggedInException("User not logged in");
-		
-			else {
-				log.info("Authenticating the token..");
-				username = jwtService.extractUsername(at);
-				UserDetails userDetails = userDetailService.loadUserByUsername(username);
-				
-				UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, null, 
-																userDetails.getAuthorities());
-				
-				token.setDetails(new WebAuthenticationDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(token);
-				log.info("Token Authenticated Successfully !!");
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals("at"))
+					at = cookie.getValue();
+				if (cookie.getName().equals("rt"))
+					rt = cookie.getValue();
 			}
-			
-		}
 		
+			String username=null;
+			System.out.println("from jwt Filter 1: "+at+" , "+rt);
+			if(at!=null && rt!=null) {
+				
+				Optional<AccessToken> accessTokenObj =accessTokenRepo.findByTokenAndIsBlocked(at,false);	
+				System.out.println("from jwt Filter 2: "+at+" , "+rt);
+				if(accessTokenObj == null) throw new UserNotLoggedInException("User not logged in");
+			
+				else {
+					log.info("Authenticating the token..");
+					System.out.println("-1-");
+					username = jwtService.extractUsername(at);
+					System.out.println("-2-");
+					UserDetails userDetails = userDetailService.loadUserByUsername(username);
+					System.out.println("-3-");
+					UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, null, 
+																	userDetails.getAuthorities());
+					System.out.println("-4-");
+					token.setDetails(new WebAuthenticationDetails(request));
+					System.out.println("-5-");
+					SecurityContextHolder.getContext().setAuthentication(token);
+					log.info("Token Authenticated Successfully !!");
+				}
+			}
+		}
+		filterChain.doFilter(request, response);
 	}
-
-	
-	
 }
