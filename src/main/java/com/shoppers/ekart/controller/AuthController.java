@@ -19,7 +19,6 @@ import com.shoppers.ekart.util.SimpleResponseStructure;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -31,7 +30,7 @@ public class AuthController {
 	private AuthService authService;
 	
 	@PostMapping("/register")
-	public ResponseEntity<ResponseStructure<String>> registerUser(@RequestBody @Valid UserRequest request){
+	public ResponseEntity<ResponseStructure<String>> registerUser(@RequestBody UserRequest request){
 		return authService.registerUser(request);
 	}
 	
