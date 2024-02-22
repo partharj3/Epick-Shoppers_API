@@ -181,7 +181,7 @@ public class AuthServiceImpl implements AuthService{
 	
 	@Override
 	public ResponseEntity<ResponseStructure<AuthResponse>> login(String at, String rt, AuthRequest request,HttpServletResponse response) {
-		if(at!=null || rt!=null) 
+		if(at!=null && rt!=null) 
 			throw new UserAlreadyLoggedInException("Logged in");
 		System.out.println("new log");
 		String username = request.getEmail().split("@")[0];

@@ -1,8 +1,10 @@
 package com.shoppers.ekart.security;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.shoppers.ekart.entity.User;
@@ -17,8 +19,7 @@ public class CustomUserDetail implements UserDetails{
 	
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-//		return Collections.singleton(new SimpleGrantedAuthority(user.getUserRole().name()));
-		return null;
+		return Collections.singleton(new SimpleGrantedAuthority(user.getUserRole().name()));
 	}
 
 	@Override
