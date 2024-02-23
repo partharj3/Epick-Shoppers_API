@@ -2,6 +2,8 @@ package com.shoppers.ekart.entity;
 
 import java.util.List;
 
+import com.shoppers.ekart.enums.AddressType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,6 +32,8 @@ public class Address {
 	private String state;
 	private String country;
 	private int pincode;
+	
+	private AddressType addressType;
 	
 	@OneToMany(mappedBy = "address")
 	private List<Contact> contacts;

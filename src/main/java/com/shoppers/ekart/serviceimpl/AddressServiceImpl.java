@@ -9,11 +9,14 @@ import com.shoppers.ekart.entity.Address;
 import com.shoppers.ekart.entity.Customer;
 import com.shoppers.ekart.entity.Seller;
 import com.shoppers.ekart.entity.Store;
+import com.shoppers.ekart.enums.AddressType;
 import com.shoppers.ekart.exception.AddressNotExistsWithThisIdException;
+import com.shoppers.ekart.exception.CustomerAddressLimitExceededException;
 import com.shoppers.ekart.exception.SellerNotHavingStoreException;
 import com.shoppers.ekart.exception.StoreAddressNotFoundException;
 import com.shoppers.ekart.exception.StoreAlreadyHasAddressException;
 import com.shoppers.ekart.exception.StoreNotFoundByIdException;
+import com.shoppers.ekart.exception.UserNotFoundByIdException;
 import com.shoppers.ekart.exception.UsernameNotFoundException;
 import com.shoppers.ekart.repository.AddressRepository;
 import com.shoppers.ekart.repository.CustomerRepository;
@@ -36,7 +39,6 @@ public class AddressServiceImpl implements AddressService{
 	private CustomerRepository customerRepo;
 	private ResponseStructure<AddressResponse> structure;
 	
-	@Override
 	public ResponseEntity<ResponseStructure<AddressResponse>> addAddress(AddressRequest request) {
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		return userRepo.findByUsername(username).map(user ->{
@@ -46,7 +48,9 @@ public class AddressServiceImpl implements AddressService{
 					Seller seller = (Seller)user;
 					Store store = seller.getStore();
 					if(store!=null) {
-						if(store.getAddress()!=null) throw new StoreAlreadyHasAddressException("Failed to Add Address to "+store.getStoreName());
+						if(store.getAddress()!=null) 
+							throw new StoreAlreadyHasAddressException("Failed to Add Address to "+store.getStoreName());
+						
 						store.setAddress(address);
 						addressRepo.save(address);
 						
@@ -74,6 +78,51 @@ public class AddressServiceImpl implements AddressService{
 	}
 
 	@Override
+	public ResponseEntity<ResponseStructure<AddressResponse>> addAddressToStore(int storeId, AddressRequest request) {
+		return storeRepo.findById(storeId)
+			.map(store ->{
+				if(store.getAddress()==null) {
+					Address address = mapToAddress(request);
+					addressRepo.save(address);
+					store.setAddress(address);
+					storeRepo.save(store);
+					
+					return new ResponseEntity<ResponseStructure<AddressResponse>>(
+							structure.setStatusCode(HttpStatus.CREATED.value())
+									 .setMessage("Address added to "+store.getStoreName())
+									 .setData(mapToAddressReponse(address)), HttpStatus.CREATED);
+				}
+				else
+					throw new StoreAlreadyHasAddressException("Failed to add Address to Store");
+			})
+			.orElseThrow(()-> new StoreNotFoundByIdException("Failed to Add Address to Store "));
+	}
+
+	@Override
+	public ResponseEntity<ResponseStructure<AddressResponse>> addAddressToCustomer(int customerId,
+			AddressRequest request) {
+		return customerRepo.findById(customerId)
+				.map(customer ->{
+					if(customer.getAddresses().size()<5) {
+						Address address = mapToAddress(request);
+						address.setCustomer(customer);
+						addressRepo.save(address);
+						
+						customer.getAddresses().add(address);
+						customer.setUserId(customerId);
+						customerRepo.save(customer);
+						
+						return new ResponseEntity<ResponseStructure<AddressResponse>>(
+								structure.setStatusCode(HttpStatus.CREATED.value())
+										 .setMessage("Address added to "+customer.getUsername())
+										 .setData(mapToAddressReponse(address)), HttpStatus.CREATED);
+					}
+					else
+						throw new CustomerAddressLimitExceededException("Failed to add address");
+				})
+				.orElseThrow(() -> new UserNotFoundByIdException("Failed to Add Address to Customer"));
+	}
+
 	public ResponseEntity<ResponseStructure<AddressResponse>> updateAddress(int addressId, AddressRequest request) {
 //		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		return addressRepo.findById(addressId)
@@ -89,7 +138,7 @@ public class AddressServiceImpl implements AddressService{
 				})
 				.orElseThrow(() -> new AddressNotExistsWithThisIdException("Failed to Update"));
 	}
-
+	
 	@Override
 	public ResponseEntity<ResponseStructure<AddressResponse>> fetchAddressById(int addressId) {
 		return addressRepo.findById(addressId)
@@ -124,6 +173,7 @@ public class AddressServiceImpl implements AddressService{
 				.state(address.getState())
 				.country(address.getCountry())
 				.pincode(address.getPincode())
+				.addressType(address.getAddressType().name())
 				.contacts(address.getContacts())
 				.build();
 	}
@@ -136,6 +186,7 @@ public class AddressServiceImpl implements AddressService{
 				.state(request.getState())
 				.country(request.getCountry())
 				.pincode(request.getPincode())
+				.addressType(AddressType.valueOf(request.getAddressType()))
 				.build();
 	}
 }

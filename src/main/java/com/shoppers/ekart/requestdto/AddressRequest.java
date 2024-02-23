@@ -18,5 +18,5 @@ public class AddressRequest {
 	private String state;
 	private String country;
 	private int pincode;
-	
+	private String addressType;
 }
