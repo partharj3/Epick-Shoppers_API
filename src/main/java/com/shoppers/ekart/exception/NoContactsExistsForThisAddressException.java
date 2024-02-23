@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class NoContactsExistsForThisAddress extends RuntimeException {
+public class NoContactsExistsForThisAddressException extends RuntimeException {
 	private String message;
 }

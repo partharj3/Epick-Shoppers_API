@@ -13,7 +13,7 @@ import com.shoppers.ekart.exception.AddressNotExistsWithThisIdException;
 import com.shoppers.ekart.exception.ContactInfoNotFoundByIdException;
 import com.shoppers.ekart.exception.ContactNumberAlreadyFoundException;
 import com.shoppers.ekart.exception.IllegalRequestException;
-import com.shoppers.ekart.exception.NoContactsExistsForThisAddress;
+import com.shoppers.ekart.exception.NoContactsExistsForThisAddressException;
 import com.shoppers.ekart.repository.AddressRepository;
 import com.shoppers.ekart.repository.ContactRepository;
 import com.shoppers.ekart.requestdto.ContactRequest;
@@ -89,7 +89,7 @@ public class ContactServiceImpl implements ContactService{
 			.map(address ->{
 				List<Contact> contacts = address.getContacts();
 				if(contacts.isEmpty() || contacts==null) 
-					throw new NoContactsExistsForThisAddress("Failed to fetch contacts for address for "+address.getAddressId());
+					throw new NoContactsExistsForThisAddressException("Failed to fetch contacts for address for "+address.getAddressId());
 					
 					List<ContactResponse> responses = new ArrayList<>(); 
 					for(Contact contact:contacts) 
