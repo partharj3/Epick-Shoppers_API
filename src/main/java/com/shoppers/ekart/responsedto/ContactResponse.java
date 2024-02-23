@@ -16,4 +16,5 @@ public class ContactResponse {
 	private String contactName;
 	private long contactNumber;
 	private String priority;
+//	private Address address;
 }
