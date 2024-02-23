@@ -17,6 +17,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.shoppers.ekart.exception.AddressNotExistsWithThisIdException;
+import com.shoppers.ekart.exception.CustomerAddressLimitExceededException;
 
 @RestControllerAdvice
 public class AddressManagementExceptionHandler extends ResponseEntityExceptionHandler{
@@ -51,4 +52,8 @@ public class AddressManagementExceptionHandler extends ResponseEntityExceptionHa
 		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "Address not found");
 	}
 
+	@ExceptionHandler(CustomerAddressLimitExceededException.class)
+	private ResponseEntity<Object> handleCustomerAddressLimit(CustomerAddressLimitExceededException exp){
+		return structure(HttpStatus.FOUND, exp.getMessage(), "Address List is full");
+	}
 }

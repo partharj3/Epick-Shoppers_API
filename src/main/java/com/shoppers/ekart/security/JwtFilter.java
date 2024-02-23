@@ -31,7 +31,8 @@ public class JwtFilter extends OncePerRequestFilter{
 
 	private AccessTokenRepository accessTokenRepo;
 	private JwtService jwtService;
-	private CustomUserDetailService userDetailService;
+	private CustomUserDetailService userDetailService; 
+	
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

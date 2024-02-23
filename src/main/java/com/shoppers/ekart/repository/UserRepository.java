@@ -22,6 +22,6 @@ public interface UserRepository extends JpaRepository<User, Integer>{
 	void deleteByIsEmailVerifiedFalse();
 
 	Optional<User> findByUsernameAndUserRole(String username,UserRole role);
-	
+
 }
 

@@ -23,16 +23,24 @@ public class AddressController {
 	
 	private AddressService addressService;
 	
-	@PostMapping("/addresses")
-	private ResponseEntity<ResponseStructure<AddressResponse>> addAddress(@RequestBody AddressRequest request){
-		return addressService.addAddress(request);
+	@PostMapping("/stores/{storeId}/addresses")
+	private ResponseEntity<ResponseStructure<AddressResponse>> addAddressToStore
+							(@PathVariable int storeId,@RequestBody AddressRequest request){
+		return addressService.addAddressToStore(storeId,request);
+	}
+	
+	@PostMapping("/customers/{customerId}/addresses")
+	private ResponseEntity<ResponseStructure<AddressResponse>> addAddressToCustomer
+							(@PathVariable int customerId,@RequestBody AddressRequest request){
+		return addressService.addAddressToCustomer(customerId,request);
 	}
 	
 	@PutMapping("/addresses/{addressId}")
-	private ResponseEntity<ResponseStructure<AddressResponse>> updateAddress(@PathVariable int addressId ,@RequestBody AddressRequest request){
+	private ResponseEntity<ResponseStructure<AddressResponse>> updateAddress
+						(@PathVariable int addressId ,@RequestBody AddressRequest request){
 		return addressService.updateAddress(addressId,request);
 	}
-	
+		
 	@GetMapping("/addresses/{addressId}")
 	private ResponseEntity<ResponseStructure<AddressResponse>> fetchAddressById(@PathVariable int addressId){
 		return addressService.fetchAddressById(addressId);

@@ -22,6 +22,7 @@ import com.shoppers.ekart.exception.SellerNotFoundByThisIdException;
 import com.shoppers.ekart.exception.SellerNotHavingStoreException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
 import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
+import com.shoppers.ekart.exception.UserNotFoundByIdException;
 import com.shoppers.ekart.exception.UserNotLoggedInException;
 import com.shoppers.ekart.exception.UsernameNotFoundException;
 
@@ -91,5 +92,10 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	@ExceptionHandler(SellerNotHavingStoreException.class)
 	private ResponseEntity<Object> handleSellerNotHavingStoreException(SellerNotHavingStoreException exp){
 		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "Store not register by Seller");
+	}
+	
+	@ExceptionHandler(UserNotFoundByIdException.class)
+	private ResponseEntity<Object> handleUserNotFoundByIdException(UserNotFoundByIdException exp){
+		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "User not exists");
 	}
 }

@@ -8,7 +8,7 @@ import com.shoppers.ekart.util.ResponseStructure;
 
 public interface AddressService {
 
-	ResponseEntity<ResponseStructure<AddressResponse>> addAddress(AddressRequest request);
+//	ResponseEntity<ResponseStructure<AddressResponse>> addAddress(int storeId, AddressRequest request);
 
 	ResponseEntity<ResponseStructure<AddressResponse>> updateAddress(int addressId, AddressRequest request);
 
@@ -16,4 +16,7 @@ public interface AddressService {
 
 	ResponseEntity<ResponseStructure<AddressResponse>> fetchAddressByStore(int storeId);
 
+	ResponseEntity<ResponseStructure<AddressResponse>> addAddressToStore(int storeId, AddressRequest request);
+
+	ResponseEntity<ResponseStructure<AddressResponse>> addAddressToCustomer(int customerId, AddressRequest request);
 }
