@@ -16,9 +16,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.shoppers.ekart.exception.AddressNotExistsWithThisIdException;
 import com.shoppers.ekart.exception.NoStoreDataExistsException;
+import com.shoppers.ekart.exception.StoreAddressNotFoundException;
 import com.shoppers.ekart.exception.StoreAlreadyExistsWithNameAndAddressException;
 import com.shoppers.ekart.exception.StoreAlreadyExistsWithSellerException;
+import com.shoppers.ekart.exception.StoreAlreadyHasAddressException;
 import com.shoppers.ekart.exception.StoreNotFoundByIdException;
 
 @RestControllerAdvice
@@ -67,6 +70,16 @@ public class StoreManagementExceptionHandler extends ResponseEntityExceptionHand
 	@ExceptionHandler(StoreAlreadyExistsWithSellerException.class)
 	private ResponseEntity<Object> handleStoreAlreadyExistsWithSellerException(StoreAlreadyExistsWithSellerException  exp){
 		return structure(HttpStatus.FOUND, exp.getMessage(), "Store Data Already Found for this Seller");
+	}
+	
+	@ExceptionHandler(StoreAddressNotFoundException.class)
+	private ResponseEntity<Object> handleStoreAddressNotFoundException(StoreAddressNotFoundException  exp){
+		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "Store address not yet inserted");
+	}
+
+	@ExceptionHandler(StoreAlreadyHasAddressException.class)
+	private ResponseEntity<Object> handleStoreAlreadyHasAddressException(StoreAlreadyHasAddressException exp){
+		return structure(HttpStatus.FOUND, exp.getMessage(), "Address already registered with this Shop");
 	}
 	
 }

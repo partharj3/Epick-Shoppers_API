@@ -49,7 +49,7 @@ public class StoreController {
 		return storeService.fetchStoreById(storeId);
 	}
 	
-	@GetMapping("/stores/sellers/{sellerId}")
+	@GetMapping("/sellers/{sellerId}/stores")
 	public ResponseEntity<ResponseStructure<StoreResponse>> fetchStoreBySeller(@PathVariable int sellerId){
 		return storeService.fetchStoreBySeller(sellerId);
 	}
