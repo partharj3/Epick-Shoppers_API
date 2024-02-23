@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import com.shoppers.ekart.exception.IllegalRequestException;
 import com.shoppers.ekart.exception.OtpNotVerifiedException;
 import com.shoppers.ekart.exception.SellerNotFoundByThisIdException;
+import com.shoppers.ekart.exception.SellerNotHavingStoreException;
 import com.shoppers.ekart.exception.UserAleadyExistsByEmailException;
 import com.shoppers.ekart.exception.UserAlreadyLoggedInException;
 import com.shoppers.ekart.exception.UserNotLoggedInException;
@@ -85,5 +86,10 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	@ExceptionHandler(SellerNotFoundByThisIdException.class)
 	private ResponseEntity<Object> handleUSellerNotFoundByThisIdException(SellerNotFoundByThisIdException exp){
 		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "No Such Seller Exists");
+	}
+	
+	@ExceptionHandler(SellerNotHavingStoreException.class)
+	private ResponseEntity<Object> handleSellerNotHavingStoreException(SellerNotHavingStoreException exp){
+		return structure(HttpStatus.NOT_FOUND, exp.getMessage(), "Store not register by Seller");
 	}
 }
