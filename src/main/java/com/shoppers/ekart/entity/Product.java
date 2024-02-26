@@ -26,6 +26,9 @@ public class Product {
 	private double productPrice;
 	private int productQuantity;
 	
+	private double avgRating;
+	private int totalOrders;
+	
 	@ManyToOne
 	private Store store;
 }
