@@ -143,10 +143,10 @@ public class AddressServiceImpl implements AddressService{
 	public ResponseEntity<ResponseStructure<AddressResponse>> fetchAddressById(int addressId) {
 		return addressRepo.findById(addressId)
 				.map(address ->{
-					return new ResponseEntity<ResponseStructure<AddressResponse>>(
-							structure.setStatusCode(HttpStatus.FOUND.value())
-									 .setMessage("Address found with ID: "+addressId)
-									 .setData(mapToAddressReponse(address)), HttpStatus.FOUND);
+					return ResponseEntity.ok(
+							structure.setStatusCode(HttpStatus.OK.value())
+							 .setMessage("Store Address Found")
+							 .setData(mapToAddressReponse(address)));
 				}).orElseThrow(() -> new AddressNotExistsWithThisIdException("Failed to Fetch this ID"));
 	}
 
@@ -156,10 +156,10 @@ public class AddressServiceImpl implements AddressService{
 				.map(store ->{
 					Address address = store.getAddress();
 					if(address==null) throw new StoreAddressNotFoundException("Failed to Fetch Address by Store");
-					return new ResponseEntity<ResponseStructure<AddressResponse>>(
-							structure.setStatusCode(HttpStatus.FOUND.value())
+					return ResponseEntity.ok(
+							structure.setStatusCode(HttpStatus.OK.value())
 									 .setMessage("Store Address Found")
-									 .setData(mapToAddressReponse(address)), HttpStatus.FOUND);
+									 .setData(mapToAddressReponse(address)));
 				})
 				.orElseThrow(() -> new StoreNotFoundByIdException("Failed to Fetch Address of Store"));
 	}

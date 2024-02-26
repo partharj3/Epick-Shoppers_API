@@ -42,7 +42,7 @@ public class StoreServiceImpl implements StoreService{
 		
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		if(username==null) throw new UsernameNotFoundException("Failed to Add Store");
-		
+		System.out.println("----entered---");
 		return userRepo.findByUsernameAndUserRole(username,UserRole.SELLER).map(user->{	
 			Seller seller = (Seller)user;
 			Store store = mapToStore(request);
@@ -105,10 +105,10 @@ public class StoreServiceImpl implements StoreService{
 		/** Public Method. No need to Login **/
 		return storeRepo.findById(storeId)
 			.map(store ->{
-				return new ResponseEntity<ResponseStructure<StoreResponse>>(
-						response.setStatusCode(HttpStatus.FOUND.value())
-						.setMessage("Store Information Fetched Successfully for "+store.getStoreName())
-						.setData(mapToStoreResponse(store)),HttpStatus.FOUND);
+				return ResponseEntity.ok(
+						response.setStatusCode(HttpStatus.OK.value())
+						.setMessage("Store Information found by Seller")
+						.setData(mapToStoreResponse(store)));
 			})
 			.orElseThrow(()-> new StoreNotFoundByIdException("Failed to Fetch store by ID"));
 	}
@@ -119,10 +119,10 @@ public class StoreServiceImpl implements StoreService{
 			Store store = seller.getStore();
 			if(store==null) throw new NoStoreDataExistsException("No Store for Seller "+seller.getUsername());
 			
-			return new ResponseEntity<ResponseStructure<StoreResponse>>(
-					response.setStatusCode(HttpStatus.FOUND.value())
+			return ResponseEntity.ok(
+					response.setStatusCode(HttpStatus.OK.value())
 							.setMessage("Store Information found by Seller")
-							.setData(mapToStoreResponse(store)), HttpStatus.FOUND);
+							.setData(mapToStoreResponse(store)));
 		}).orElseThrow(()-> new SellerNotFoundByThisIdException("Failed to fetch Store"));
 	}
 	

@@ -75,10 +75,10 @@ public class ContactServiceImpl implements ContactService{
 	public ResponseEntity<ResponseStructure<ContactResponse>> fetchContactById(int contactId) {
 		return contactRepo.findById(contactId)
 			.map(contact ->{
-				return new ResponseEntity<ResponseStructure<ContactResponse>>(
+				return ResponseEntity.ok(
 						structure.setStatusCode(HttpStatus.FOUND.value())
-								 .setMessage("Contact Information Found!")
-								 .setData(mapToContactResponse(contact)), HttpStatus.FOUND);
+						 .setMessage("Contact Information Found!")
+						 .setData(mapToContactResponse(contact)));
 			})
 			.orElseThrow(() -> new ContactInfoNotFoundByIdException("Failed to fetch Contact"));
 	}
