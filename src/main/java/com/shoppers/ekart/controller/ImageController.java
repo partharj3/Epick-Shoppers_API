@@ -1,6 +1,7 @@
 package com.shoppers.ekart.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import lombok.AllArgsConstructor;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1")
+@CrossOrigin(allowCredentials = "true", origins = "http://localhost:5173/")
 public class ImageController {
 
 	private ImageService imageService;
@@ -30,4 +32,8 @@ public class ImageController {
 		return imageService.getImage(imageId);
 	}
 	
+	@GetMapping("/stores/{storeId}/store-logo")
+	public ResponseEntity<byte[]> getImageByStoreId(@PathVariable int storeId){
+		return imageService.getImageByStoreId(storeId);
+	}
 }

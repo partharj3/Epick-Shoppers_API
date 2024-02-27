@@ -1,5 +1,7 @@
 package com.shoppers.ekart.entity;
 
+import com.shoppers.ekart.enums.AvailabilityStatus;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,6 +28,7 @@ public class Product {
 	private double productPrice;
 	private int productQuantity;
 	
+	private AvailabilityStatus status;
 	private double avgRating;
 	private int totalOrders;
 	
