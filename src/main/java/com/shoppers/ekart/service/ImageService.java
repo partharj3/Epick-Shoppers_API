@@ -11,4 +11,6 @@ public interface ImageService {
 
 	ResponseEntity<byte[]> getImage(String imageId);
 
+	ResponseEntity<byte[]> getImageByStoreId(int storeId);
+
 }

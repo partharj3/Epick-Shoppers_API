@@ -250,12 +250,14 @@ public class AuthServiceImpl implements AuthService{
 			at.setBlocked(true);
 			accessTokenRepo.save(at);
 		});
-		response.addCookie(cookieManager.invalidate(new Cookie("at","")));
+		
 		
 		refreshTokenRepo.findByToken(refreshToken).ifPresent(rt ->{
 			rt.setBlocked(true);
 			refreshTokenRepo.save(rt);
 		});
+		
+		response.addCookie(cookieManager.invalidate(new Cookie("at","")));
 		response.addCookie(cookieManager.invalidate(new Cookie("rt","")));
 		
 		SimpleResponseStructure structure = new SimpleResponseStructure();

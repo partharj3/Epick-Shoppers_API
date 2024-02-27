@@ -16,4 +16,5 @@ public class Image {
 	private String imageId;
 	private ImageType imageType;
 	private byte[] imageBytes;
+	private String contentType;
 }
