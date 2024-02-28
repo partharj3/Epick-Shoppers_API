@@ -33,6 +33,7 @@ public class ImageServiceImpl implements ImageService{
 	public ResponseEntity<ResponseStructure<String>> addStoreImage(int storeId, MultipartFile image) {
 		return storeRepo.findById(storeId)
 				.map(store ->{
+					System.err.println("Store found to add image");
 					StoreImage storeImg = new StoreImage();
 					storeImg.setStoreId(storeId);
 					storeImg.setImageType(ImageType.LOGO);

@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document
+//@Document
 public class StoreImage extends Image{
 	private int storeId;
 }
